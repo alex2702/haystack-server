@@ -11,6 +11,34 @@ export class HaystackRoom extends Room<HaystackRoomState> {
   onCreate (options: any) {
     this.setState(new HaystackRoomState());
     this.setPrivate(true);
+
+    this.onMessage("settings/update", (client, message) => {
+
+    });
+
+    this.onMessage("game/start", (client, message) => {
+
+    });
+
+    this.onMessage("round/start", (client, message) => {
+
+    });
+
+    this.onMessage("guess/submit", (client, message) => {
+
+    });
+
+    this.onMessage("scores/send", (client, message) => {
+
+    });
+
+    this.onMessage("round/finish", (client, message) => {
+
+    });
+
+    this.onMessage("game/cancel", (client, message) => {
+
+    });
   }
 
   // Authorize client based on provided options before WebSocket handshake is complete
