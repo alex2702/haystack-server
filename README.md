@@ -25,6 +25,39 @@ npm start
         - `npm run loadtest`: runs the [`@colyseus/loadtest`](https://github.com/colyseus/colyseus-loadtest/) tool for testing the connection, using the `loadtest/example.ts` script.
 - `tsconfig.json`: TypeScript configuration file
 
+## Datasets
+
+Different location sets are available to play with.
+
+### Data Source
+
+All data has been from acquired from wikidata.org using their [Query Service](https://query.wikidata.org/).
+
+The resulting CSV files are processed with some simple Python scripts to get rid of duplicates.
+Furthermore, some restrictions apply (see below) to limit the difficulty.
+
+### Available Sets
+
+There are currently four datasets to choose from:
+
+#### World Cities
+- Population must be over 100.000.
+- For Germany, Switzerland, and Austria, a maximum of 25 cities can be in the set.
+- For other European countries, at most 10 cities are included.
+- For all other countries, the limit is 2 cities.
+
+#### European Cities
+- Population must be over 100.000.
+- For Germany, Switzerland, and Austria, a maximum of 25 cities can be in the set.
+- For other European countries, at most 10 cities are included.
+
+#### European Football Stadiums
+- There must be a club from a large European league (about 20 countries + second and third vision of Germany) 
+  playing in the stadium.
+
+#### German Football Stadiums
+- There must be a club from the top three divisions playing in the stadium.
+
 ## License
 
 MIT

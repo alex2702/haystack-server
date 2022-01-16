@@ -37,6 +37,8 @@ export class HaystackRoomState extends Schema {
 
     // settings
     @type("number") settingRounds = 4;
+    // TODO some other data type to constrain this to one of the fixed values?
+    @type("string") settingLocationSet = "C_WW";
     @type("number") settingTimeLimit = 30;
 
     // data bound to CURRENT round

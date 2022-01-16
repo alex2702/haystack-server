@@ -18,9 +18,6 @@ export class HaystackRoom extends Room<HaystackRoomState> {
     this.setState(new HaystackRoomState());
     this.setPrivate(true);
 
-    // load city set
-    this.targetDataSet = this.readDataSet();
-
     this.onMessage("settings/update", (client, message) => {
       // check if starting user is an admin
       if(this.state.players.get(client.id).admin === true) {
@@ -32,6 +29,7 @@ export class HaystackRoom extends Room<HaystackRoomState> {
       }
     });
 
+    // TODO put in Command => split up between start_game and start_round
     this.onMessage("game/start", (client, message) => {
       // check if starting user is an admin
       if(this.state.players.get(client.id).admin === true) {
@@ -54,6 +52,7 @@ export class HaystackRoom extends Room<HaystackRoomState> {
       }
     });
 
+    // TODO put in command
     this.onMessage("guess/submit", (client, message) => {
       this.onGuess(client, message);
     });
@@ -119,6 +118,12 @@ export class HaystackRoom extends Room<HaystackRoomState> {
   // When a client leaves the room
   async onLeave(client: Client, consented: boolean) {
     try {
+      /* TODO when implementing consented leaves, check what parts of this method have to be run and what parts don't
+      if (consented) {
+        throw new Error("consented leave");
+      }
+      */
+
       // if player was admin, make next non-admin player an admin (for each runs by time_joined)
       if (this.state.players.get(client.id).admin) {
         let newAdminFound = false;
@@ -152,6 +157,10 @@ export class HaystackRoom extends Room<HaystackRoomState> {
         }
       });
 
+      //if(activePlayersRemaining == 0) {
+      //  this.finishGame();  // TODO do cancelGame instead?
+      //}
+
       // if guessing is active and the player hadn't yet submitted, submit an empty guess
       if(this.state.guessingActive) {
         this.onGuess(client, { latLng: [0, 0] });
@@ -171,6 +180,7 @@ export class HaystackRoom extends Room<HaystackRoomState> {
       this.state.players.get(client.id).timeJoined = this.clock.currentTime;
 
       // if there is currently no active admin, the rejoined client will be admin
+      // TODO same code as in OnJoin, refactor and put into function
       let connectedAdmins = 0;
       this.state.players.forEach((player) => {
         // do not count the current player
@@ -216,10 +226,29 @@ export class HaystackRoom extends Room<HaystackRoomState> {
     this.dispatcher.stop();
   }
 
-  readDataSet(): any {
+  readDataSet(locationSetName: string): any {
     try {
+      let data;
+
+      switch(locationSetName) {
+        case 'C_WW':
+          data = fs.readFileSync('./data/cities_ww.json', 'utf8');
+          break;
+        case 'C_EU':
+          data = fs.readFileSync('./data/cities_eu.json', 'utf8');
+          break;
+        case 'S_EU':
+          data = fs.readFileSync('./data/stadiums_eu.json', 'utf8');
+          break;
+        case 'S_DE':
+          data = fs.readFileSync('./data/stadiums_de.json', 'utf8');
+          break;
+        default:
+          data = fs.readFileSync('./data/cities_ww.json', 'utf8');
+      }
+
       // parse JSON string to JSON object
-      return JSON.parse(fs.readFileSync('./data/cities_ww.json', 'utf8'));
+      return JSON.parse(data);
     } catch (err) {
       console.log(`Error reading file from disk: ${err}`);
     }
@@ -232,9 +261,27 @@ export class HaystackRoom extends Room<HaystackRoomState> {
       this.state.settingRounds = Number(settingsInput.settings.rounds);
     }
 
+    // location set
+    if(settingsInput.settings.locationSet) {
+      // TODO better way to validate that it's one of the available sets? Where/how to
+      //  store available sets?
+      let availableSets = ['C_WW', 'C_EU', 'S_EU', 'S_DE']
+      if(availableSets.indexOf(settingsInput.settings.locationSet) > -1) {
+        this.state.settingLocationSet = settingsInput.settings.locationSet
+      }
+    }
+
+    // time limit
+    if(settingsInput.settings.timeLimit && settingsInput.settings.timeLimit >= 5 &&
+        settingsInput.settings.timeLimit <= 90) {
+      this.state.settingTimeLimit = Number(settingsInput.settings.timeLimit);
+    }
+
     // fetch settings from state
     let settings = {
-      rounds: this.state.settingRounds
+      rounds: this.state.settingRounds,
+      locationSet: this.state.settingLocationSet,
+      timeLimit: this.state.settingTimeLimit
     };
 
     // send updated settings to all clients
@@ -245,7 +292,11 @@ export class HaystackRoom extends Room<HaystackRoomState> {
     this.state.gameActive = true;
 
     this.state.settingRounds = Number(settings.rounds);
+    this.state.settingLocationSet = settings.locationSet;
     this.state.settingTimeLimit = Number(settings.timeLimit || 30);
+
+    // load data set
+    this.targetDataSet = this.readDataSet(settings.locationSet);
 
     // set all players as inGame = true
     this.state.players.forEach((player: Player, id: string) => {
@@ -366,8 +417,6 @@ export class HaystackRoom extends Room<HaystackRoomState> {
   }
 
   finishRound() {
-    console.log("finishRound", this.state.settingRounds, this.state.currentRoundCounter);
-
     // TODO
     // reset currentRound here?
     // or re-initialize in startRound?
@@ -430,6 +479,19 @@ export class HaystackRoom extends Room<HaystackRoomState> {
   // TODO put in HaystackResult?
   calculatePoints(distance: number) {
     let sf = 1
+
+    // adjust scaling factor based on location set
+    switch(this.state.settingLocationSet) {
+      case 'C_EU':
+      case 'S_EU':
+        sf = 2.5;
+        break;
+      case 'S_DE':
+        sf = 5;
+        break;
+      default:
+        sf = 1;
+    }
 
     return Math.round(Math.E ** (-sf * (sf * distance) ** 2 / 600000) * 1000);
   }
