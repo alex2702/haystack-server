@@ -5,6 +5,8 @@
   "description": "npm init template for bootstrapping an empty Colyseus project",
   "main": "lib/index.js",
   "scripts": {
+    "create-db": "psql -U haystack_user < src/database/schema.sql",
+    "seed": "npm run create-db && ts-node src/database/seed.ts",
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "loadtest": "colyseus-loadtest loadtest/example.ts --room haystack_room --numClients 2",
     "build": "npm run clean && tsc && node node_modules/copyfiles/copyfiles package.json ./lib && node node_modules/copyfiles/copyfiles arena.env ./lib && node node_modules/copyfiles/copyfiles ./data/cities.json ./lib",
@@ -33,6 +35,7 @@
     "colyseus": "^0.14.23",
     "cors": "^2.8.5",
     "express": "^4.17.2",
-    "geolib": "^3.3.3"
+    "geolib": "^3.3.3",
+    "pg": "^8.7.1"
   }
 }
