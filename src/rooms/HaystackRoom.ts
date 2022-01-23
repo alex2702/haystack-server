@@ -307,9 +307,6 @@ export class HaystackRoom extends Room<HaystackRoomState> {
     });
     this.broadcastPatch();
 
-    console.log("game/started")
-    this.broadcast("game/started", {});
-
     this.prepareRound();
   }
 
