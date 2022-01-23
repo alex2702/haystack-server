@@ -20,6 +20,11 @@ A running version of the game can be found at [haystack.axm.li](https://haystack
   location that they believe the place is in. Once all players are done (or the time is up), the round is over.
 - After each round, scores are calculated and shown to the users.
 
+The following scheme outlines the steps to be taken and more importantly, the messages that colyseus uses for 
+communication between backend and frontend.
+
+![Game Logic](/game_logic.png "Game Logic")
+
 ### Future Ideas
 
 ##### Improved Score Calculation
